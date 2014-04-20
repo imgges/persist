@@ -2,7 +2,7 @@
  * @list dependencies
  */
 
-var Promise = require('node-promise').Promise;
+var Promise = require('bluebird');
 
 /**
  * @description wrapper for models to return promises versus executing immediately
@@ -18,15 +18,15 @@ var Model = function(mongooseModel) {
  */
 
 Model.prototype.find = function(query, fields, options) {
-  var promise = new Promise();
-  this.baseModel.find(query, fields, options, function(error, result) {
-    if (error) {
-      promise.reject(error, true);
-    } else {
-      promise.resolve(result);
-    };
-  });
-  return promise;
+  return new Promise(function (resolve, reject) {
+    this.baseModel.find(query, fields, options, function(error, result) {
+      if (error) {
+        reject(error, true);
+      } else {
+        resolve(result);
+      };
+    });
+  }.bind(this));
 };
 
 /**
@@ -35,15 +35,15 @@ Model.prototype.find = function(query, fields, options) {
  */
 
 Model.prototype.findOne = function(query, fields, options) {
-  var promise = new Promise();
-  this.baseModel.findOne(query, fields, options, function(error, result) {
-    if (error) {
-      promise.reject(error, true);
-    } else {
-      promise.resolve(result);
-    };
-  });
-  return promise;
+  return new Promise(function (resolve, reject) {
+    this.baseModel.findOne(query, fields, options, function(error, result) {
+      if (error) {
+        reject(error, true);
+      } else {
+        resolve(result);
+      };
+    });
+  }.bind(this));
 };
 
 /**
@@ -52,19 +52,19 @@ Model.prototype.findOne = function(query, fields, options) {
  */
 
 Model.prototype.update = function(query, document, options) {
-  var promise = new Promise()
-  this.baseModel.update(query, document, options, function(error, affected) {
-    if (error) {
-      promise.reject(error, true);
-    } else {
-      if (affected === 0) {
-        promise.reject(new Error('MongoDB - Cannot find Document'), true);
+  return new Promise(function (resolve, reject) {
+    this.baseModel.update(query, document, options, function(error, affected) {
+      if (error) {
+        reject(error, true);
       } else {
-        promise.resolve();
+        if (affected === 0) {
+          reject(new Error('MongoDB - Cannot find Document'), true);
+        } else {
+          resolve();
+        };
       };
-    };
-  });
-  return promise;
+    });
+  }.bind(this));
 };
 
 /**
@@ -73,19 +73,19 @@ Model.prototype.update = function(query, document, options) {
  */
 
 Model.prototype.create = function(data) {
-  var promise = new Promise();
-  this.baseModel.create(data, function(error, result) {
-    if (error) {
-      if (error.message && error.message.match(/E11000/i)) {
-        promise.reject(new Error('Duplicate Key Error'), true);
+  return new Promise(function (resolve, reject) {
+    this.baseModel.create(data, function(error, result) {
+      if (error) {
+        if (error.message && error.message.match(/E11000/i)) {
+          reject(new Error('Duplicate Key Error'), true);
+        } else {
+          reject(error, true)
+        };
       } else {
-        promise.reject(error, true)
+        resolve(result);
       };
-    } else {
-      promise.resolve(result);
-    };
-  });
-  return promise;
+    });
+  }.bind(this));
 };
 
 /**
@@ -94,29 +94,29 @@ Model.prototype.create = function(data) {
  */
 
 Model.prototype.findOrCreate = function(query, document, options) {
-  var promise = new Promise()
-    , baseModel = this;
-  baseModel.findOne(query, function(error, result) {
-    if (error) {
-      if (error.message && error.message.match(/E11000/i)) {
-        promise.reject(new Error('Duplicate Key Error'), true);
+  return new Promise(function (resolve, reject) {
+    var baseModel = this;
+    baseModel.findOne(query, function(error, result) {
+      if (error) {
+        if (error.message && error.message.match(/E11000/i)) {
+          reject(new Error('Duplicate Key Error'), true);
+        } else {
+          reject(error, true);
+        };
       } else {
-        promise.reject(error, true);
+        if (result && result !== null) {
+          resolve(result);
+        } else {
+          var createPromise = baseModel.create(document);
+          createPromise.then(function(result) {
+            resolve(result);
+          }, function(error) {
+            reject(error, true);
+          });
+        }
       };
-    } else {
-      if (result && result !== null) {
-        promise.resolve(result);
-      } else {
-        var createPromise = baseModel.create(document);
-        createPromise.then(function(result) {
-          promise.resolve(result);
-        }, function(error) {
-          promise.reject(error, true);
-        });
-      }
-    };
-  });
-  return promise;
+    });
+  }.bind(this));
 };
 
 module.exports = Model;

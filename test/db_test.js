@@ -3,8 +3,7 @@
  */
 var should = require('should'),
     db = 'localhost:27017/imgges-test',
-    assetModel = require('../lib/assetModel'),
-    Promise = require('node-promise').Promise;
+    assetModel = require('../lib/assetModel');
 
 describe('MongoDB', function () {
     it('should be online', function(done) {
