@@ -1,0 +1,30 @@
+{
+  "name": "imgges-persist",
+  "version": "0.0.0",
+  "description": "Database persistence for imgges",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imgges/persist.git"
+  },
+  "author": "Stephen Tudor",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/imgges/persist/issues"
+  },
+  "homepage": "https://github.com/imgges/persist",
+  "devDependencies": {
+    "should": "^3.3.1",
+    "mocha": "^1.18.2"
+  },
+  "dependencies": {
+    "extend": "^1.2.1",
+    "node-promise": "^0.5.10",
+    "short-id": "0.1.0-1",
+    "mongoose": "^3.8.8",
+    "shortid": "^2.0.0"
+  }
+}
